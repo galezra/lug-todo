@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Todo</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f5f5f5;
+      color: #1a1a1a;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 40px 16px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.08);
+      padding: 32px;
+      width: 100%;
+      max-width: 480px;
+    }
+    h1 { font-size: 1.5rem; margin-bottom: 24px; }
+    h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 16px; color: #444; }
+    label { display: block; font-size: .875rem; font-weight: 500; margin-bottom: 4px; color: #555; }
+    input[type=text], input[type=email], input[type=password] {
+      width: 100%; padding: 9px 12px; font-size: 1rem;
+      border: 1px solid #d1d5db; border-radius: 7px; outline: none;
+      transition: border-color .15s;
+    }
+    input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.15); }
+    .field { margin-bottom: 14px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 18px; font-size: .95rem; font-weight: 500;
+      border: none; border-radius: 7px; cursor: pointer;
+      transition: background .15s, opacity .15s;
+    }
+    .btn-primary { background: #6366f1; color: #fff; }
+    .btn-primary:hover { background: #4f46e5; }
+    .btn-ghost {
+      background: transparent; color: #6b7280; padding: 6px 10px; font-size: .85rem;
+    }
+    .btn-ghost:hover { background: #f3f4f6; color: #1a1a1a; }
+    .btn-danger { background: transparent; color: #ef4444; padding: 6px 10px; font-size: .85rem; }
+    .btn-danger:hover { background: #fef2f2; }
+    .btn-full { width: 100%; justify-content: center; margin-top: 4px; }
+    .error { color: #dc2626; font-size: .875rem; margin-bottom: 12px; min-height: 1.2em; }
+    .link-row { text-align: center; margin-top: 16px; font-size: .875rem; color: #6b7280; }
+    .link-row a { color: #6366f1; text-decoration: none; font-weight: 500; }
+    .link-row a:hover { text-decoration: underline; }
+    nav {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 24px;
+    }
+    nav .user { font-size: .875rem; color: #6b7280; }
+    .add-row { display: flex; gap: 8px; margin-bottom: 20px; }
+    .add-row input { flex: 1; }
+    ul { list-style: none; }
+    li {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 0;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    li:last-child { border-bottom: none; }
+    li.done .todo-text { text-decoration: line-through; color: #9ca3af; }
+    .todo-text { flex: 1; font-size: .95rem; word-break: break-word; }
+    .edit-input { flex: 1; padding: 5px 8px; font-size: .95rem; border: 1px solid #6366f1; border-radius: 6px; outline: none; }
+    .checkbox {
+      width: 18px; height: 18px; flex-shrink: 0; cursor: pointer;
+      accent-color: #6366f1;
+    }
+    .actions { display: flex; gap: 2px; flex-shrink: 0; }
+    .empty { text-align: center; color: #9ca3af; padding: 32px 0; font-size: .9rem; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+<div class="card">
+
+  <!-- Login screen -->
+  <div id="screen-login">
+    <h1>Todo</h1>
+    <h2>Log in</h2>
+    <div class="error" id="login-error"></div>
+    <div class="field"><label>Username</label><input id="login-user" type="text" placeholder="your username" autocomplete="username"></div>
+    <div class="field"><label>Password</label><input id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="btn btn-primary btn-full" onclick="doLogin()">Log in</button>
+    <div class="link-row">No account? <a href="#" onclick="show('screen-signup');return false">Sign up</a></div>
+  </div>
+
+  <!-- Signup screen -->
+  <div id="screen-signup" class="hidden">
+    <h1>Todo</h1>
+    <h2>Create account</h2>
+    <div class="error" id="signup-error"></div>
+    <div class="field"><label>Username</label><input id="signup-user" type="text" placeholder="choose a username" autocomplete="username"></div>
+    <div class="field"><label>Password</label><input id="signup-pass" type="password" placeholder="min 8 characters" autocomplete="new-password"></div>
+    <button class="btn btn-primary btn-full" onclick="doSignup()">Sign up</button>
+    <div class="link-row">Have an account? <a href="#" onclick="show('screen-login');return false">Log in</a></div>
+  </div>
+
+  <!-- App screen -->
+  <div id="screen-app" class="hidden">
+    <nav>
+      <span id="app-title" style="font-weight:700;font-size:1.2rem">My Todos</span>
+      <span class="user">👤 <span id="app-username"></span> &nbsp;<a href="#" onclick="doLogout();return false" style="color:#6366f1;font-size:.8rem;text-decoration:none">log out</a></span>
+    </nav>
+    <div class="add-row">
+      <input id="new-todo" type="text" placeholder="Add a todo…" onkeydown="if(event.key==='Enter')addTodo()">
+      <button class="btn btn-primary" onclick="addTodo()">Add</button>
+    </div>
+    <ul id="todo-list"></ul>
+    <div id="empty" class="empty hidden">Nothing here yet — add your first todo above.</div>
+  </div>
+
+</div>
+<script>
+// ── storage helpers ──────────────────────────────────────────────────────────
+
+function usersKey()        { return 'tapp:users'; }
+function todosKey(user)    { return 'tapp:todos:' + user; }
+function sessionKey()      { return 'tapp:session'; }
+
+function getUsers()        { return JSON.parse(localStorage.getItem(usersKey()) || '{}'); }
+function saveUsers(u)      { localStorage.setItem(usersKey(), JSON.stringify(u)); }
+function getTodos(user)    { return JSON.parse(localStorage.getItem(todosKey(user)) || '[]'); }
+function saveTodos(user,t) { localStorage.setItem(todosKey(user), JSON.stringify(t)); }
+function getSession()      { return localStorage.getItem(sessionKey()); }
+function saveSession(u)    { localStorage.setItem(sessionKey(), u); }
+function clearSession()    { localStorage.removeItem(sessionKey()); }
+
+// simple non-cryptographic hash — good enough for a local demo without a backend
+async function hashPass(pass) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pass));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+// ── routing ──────────────────────────────────────────────────────────────────
+
+function show(id) {
+  ['screen-login','screen-signup','screen-app'].forEach(s => {
+    document.getElementById(s).classList.toggle('hidden', s !== id);
+  });
+}
+
+// ── auth ─────────────────────────────────────────────────────────────────────
+
+async function doSignup() {
+  const user = document.getElementById('signup-user').value.trim();
+  const pass = document.getElementById('signup-pass').value;
+  const err  = document.getElementById('signup-error');
+  err.textContent = '';
+  if (!user) return err.textContent = 'Username is required.';
+  if (pass.length < 8) return err.textContent = 'Password must be at least 8 characters.';
+  const users = getUsers();
+  if (users[user]) return err.textContent = 'That username is taken.';
+  users[user] = await hashPass(pass);
+  saveUsers(users);
+  saveSession(user);
+  loadApp(user);
+}
+
+async function doLogin() {
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const err  = document.getElementById('login-error');
+  err.textContent = '';
+  if (!user) return err.textContent = 'Username is required.';
+  const users = getUsers();
+  if (!users[user] || users[user] !== await hashPass(pass))
+    return err.textContent = 'Invalid username or password.';
+  saveSession(user);
+  loadApp(user);
+}
+
+function doLogout() {
+  clearSession();
+  show('screen-login');
+}
+
+// ── app ───────────────────────────────────────────────────────────────────────
+
+let currentUser = null;
+
+function loadApp(user) {
+  currentUser = user;
+  document.getElementById('app-username').textContent = user;
+  show('screen-app');
+  renderTodos();
+  document.getElementById('new-todo').focus();
+}
+
+function renderTodos() {
+  const todos = getTodos(currentUser);
+  const list  = document.getElementById('todo-list');
+  const empty = document.getElementById('empty');
+  list.innerHTML = '';
+  if (todos.length === 0) { empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+  todos.forEach((t, i) => {
+    const li = document.createElement('li');
+    if (t.done) li.classList.add('done');
+
+    const cb = document.createElement('input');
+    cb.type = 'checkbox'; cb.className = 'checkbox'; cb.checked = t.done;
+    cb.onchange = () => toggleTodo(i);
+
+    const span = document.createElement('span');
+    span.className = 'todo-text'; span.textContent = t.text;
+
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn btn-ghost'; editBtn.title = 'Edit';
+    editBtn.textContent = 'Edit';
+    editBtn.onclick = () => startEdit(li, i, t.text, span, editBtn);
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn btn-danger'; delBtn.title = 'Delete';
+    delBtn.textContent = '✕';
+    delBtn.onclick = () => deleteTodo(i);
+
+    actions.append(editBtn, delBtn);
+    li.append(cb, span, actions);
+    list.appendChild(li);
+  });
+}
+
+function startEdit(li, i, text, span, editBtn) {
+  const input = document.createElement('input');
+  input.className = 'edit-input'; input.value = text;
+  span.replaceWith(input);
+  editBtn.textContent = 'Save';
+  editBtn.onclick = () => commitEdit(li, i, input, editBtn);
+  input.onkeydown = e => { if (e.key === 'Enter') commitEdit(li, i, input, editBtn); if (e.key === 'Escape') renderTodos(); };
+  input.focus(); input.select();
+}
+
+function commitEdit(li, i, input, btn) {
+  const text = input.value.trim();
+  if (!text) return;
+  const todos = getTodos(currentUser);
+  todos[i].text = text;
+  saveTodos(currentUser, todos);
+  renderTodos();
+}
+
+function addTodo() {
+  const input = document.getElementById('new-todo');
+  const text  = input.value.trim();
+  if (!text) return;
+  const todos = getTodos(currentUser);
+  todos.push({ text, done: false });
+  saveTodos(currentUser, todos);
+  input.value = '';
+  renderTodos();
+  input.focus();
+}
+
+function toggleTodo(i) {
+  const todos = getTodos(currentUser);
+  todos[i].done = !todos[i].done;
+  saveTodos(currentUser, todos);
+  renderTodos();
+}
+
+function deleteTodo(i) {
+  const todos = getTodos(currentUser);
+  todos.splice(i, 1);
+  saveTodos(currentUser, todos);
+  renderTodos();
+}
+
+// ── boot ─────────────────────────────────────────────────────────────────────
+
+const session = getSession();
+if (session && getUsers()[session]) {
+  loadApp(session);
+} else {
+  show('screen-login');
+}
+</script>
+</body>
+</html>
