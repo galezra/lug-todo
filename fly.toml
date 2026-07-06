@@ -1,0 +1,13 @@
+# ponytail: deploy target for LUG-3 scaffold, not yet launched — needs a human to run
+# `fly launch`/`fly deploy` once a Fly.io account exists. See README.
+app = "lug-todo"
+primary_region = "iad"
+
+[build]
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
